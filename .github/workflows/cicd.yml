@@ -1,0 +1,226 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.cff'
+
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.cff'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  get-python-versions:
+    name: Get Python Versions (>= 3.9)
+    runs-on: ubuntu-latest
+    outputs:
+      version-matrix: ${{ steps.get-language-versions.outputs.latest-versions }}
+
+    steps:
+      - name: Get Required Versions
+        uses: ActionsToolbox/get-language-versions-action@446919617fd774095b5dd3ed71c39dd3fd0d8f4f  # v0.1.3
+        id: get-language-versions
+        with:
+          language: "python"
+          min-version: 3.9
+          remove-patch-version: true
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Perform ShellCheck Analysis
+        run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/shellcheck/master/pipeline.sh)
+
+  bandit:
+    name: Bandit
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ${{ fromJson(needs.get-python-versions.outputs.version-matrix) }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.1.0
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: Perform Bandit Analysis
+        env:
+          EXCLUDE_FILES: README.md
+        run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/bandit/master/pipeline.sh)
+
+  pycodestyle:
+    name: Pycodestyle
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ${{ fromJson(needs.get-python-versions.outputs.version-matrix) }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.1.0
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: Perform Pycodestyle Analysis
+        env:
+          EXCLUDE_FILES: README.md
+        run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/pycodestyle/master/pipeline.sh)
+
+  pydocstyle:
+    name: Pydocstyle
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ${{ fromJson(needs.get-python-versions.outputs.version-matrix) }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.1.0
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: Perform Pydocstyle Analysis
+        env:
+          EXCLUDE_FILES: README.md
+        run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/pydocstyle/master/pipeline.sh)
+
+  pylama:
+    name: Pylama
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ${{ fromJson(needs.get-python-versions.outputs.version-matrix) }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.1.0
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: Perform Pylama Analysis
+        env:
+          EXCLUDE_FILES: README.md
+        run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/pylama/master/pipeline.sh)
+
+  pylint:
+    name: Pylint
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ${{ fromJson(needs.get-python-versions.outputs.version-matrix) }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.1.0
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: Perform Pylint Analysis
+        env:
+          EXCLUDE_FILES: README.md
+        run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/pylint/master/pipeline.sh)
+
+  pytest:
+    name: Pytest
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-versions: ${{ fromJson(needs.get-python-versions.outputs.version-matrix) }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.1.0
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: Upgrade Pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install Build Tools
+        run: pip install setuptools wheel
+
+      - name: Build the Package
+        run: python setup.py sdist bdist_wheel
+
+      - name: Install the Package
+        run: pip install dist/*.whl
+
+      - name: Install Pytest
+        run: pip install pytest pytest-mock
+
+      - name: Run Pytest
+        run: pytest --no-header -vv
+
+  cicd-pipeline:
+    if: always()
+    name: CI/CD Pipeline
+    needs:
+      - shellcheck
+      - bandit
+      - pycodestyle
+      - pydocstyle
+      - pylama
+      - pylint
+      - pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29  # v4.1.6
+
+      - name: Check Job Statuses
+        run: .github/scripts/check-jobs.sh '${{ toJson(needs) }}'
