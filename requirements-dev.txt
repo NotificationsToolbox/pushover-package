@@ -1,2 +1,2 @@
 pytest==8.3.2
-setuptools==70.3.0
+setuptools==72.1.0
